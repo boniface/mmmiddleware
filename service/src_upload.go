@@ -13,6 +13,7 @@ import (
 	"github.com/pborman/uuid"
 	"time"
 	"hashcode.zm/mmmiddleware/dbconn"
+	//"regexp"
 )
 
 type DateEF struct {
@@ -28,7 +29,14 @@ func StartUploadService(filedata []string,uploadSetting model.UploadSetting,uplo
 	p :=fmt.Println
 	for x,online :=range filedata{
 		if x>=startX{
-			row :=strings.Split(online,";")
+			row:=[]string{}
+			if strings.Contains(online,";"){
+				row =strings.Split(online,";")
+			}
+			if strings.Contains(online,","){
+				row =strings.Split(online,",")
+			}
+
 			indexCode :=uploadSetting.CodeColom -1
 			indexDesc :=uploadSetting.DescColom - 1
 			indexDebt :=uploadSetting.DebitColom-1
@@ -45,7 +53,7 @@ func StartUploadService(filedata []string,uploadSetting model.UploadSetting,uplo
 			if contains(row, indexDebt){
 				mmDebit = row[indexDebt]
 			}
-			if contains(row, indexCode){
+			if contains(row, indexCredit){
 				mmCredit = row[indexCredit]
 			}
 			if contains(row, indexDesc){
@@ -111,11 +119,21 @@ func builCustomerUploadData(rawdata string,uploadSetting model.UploadSetting,dat
 	custUploadData.EntrySubCategory = fs.SubCategory
 	custUploadData.CsvStringInput =rawdata
 	custUploadData.MappingCode =""
+	custUploadData.DetermineTransctionType()
+	if custUploadData.EntryDescription !=""{
+		if !strings.Contains(custUploadData.EntryDescription,"\r"){
+			if !strings.Contains(custUploadData.EntryDescription,"\n"){
+				dbconn.InsertRowTable(custUploadData ,"customerUpload")
+			}
 
-	dbconn.InsertRowTable(custUploadData ,"customerUpload")
+		}
+
+	}
 
 	return custUploadData
 }
+
+
 
 func CheckIfFileInPool(env string) []string {
 	var finded []string
@@ -161,7 +179,7 @@ func ReadCsvInto_CustomerUpload(filename string) []string {
 	lines := strings.Split(s, "\n")
 
 	for _, oneline := range lines {
-		//fmt.Println("===>", oneline)
+		fmt.Println("===>", oneline)
 		upList = append(upList, oneline)
 	}
 	return upList
@@ -224,8 +242,6 @@ func extractDate(datestring string) DateEF {
 	return mydate
 }
 
-
-
 var MapFinancialStatementInfo map[string]model.FinancialStatementInfo
 
 func LoadDefaultFinanceCodePastel()map[string]model.FinancialStatementInfo{
@@ -272,7 +288,17 @@ func FindFinanceStateInfo_Pastel(mmcode string)(model.FinancialStatementInfo,boo
 		strCode =arrStr[0]
 	}
 
+
+	/*re := regexp.MustCompile( "[^0-9]" )
+	strCode = re.ReplaceAllString( strCode, "" )
+	fmt.Printf( re.ReplaceAllString( "hello 12 34 five", "" ) )*/
+	strCode= strings.Replace(strCode,"\n","",1)
+	strCode= strings.Replace(strCode,"\r","",1)
+	strCode = strings.Replace(strCode,";","",1)
+	strCode = strings.Replace(strCode,",","",2)
+
 	incode,err :=strconv.ParseInt(strCode,10,64)
+
 	if err !=nil{
 		log.Println("ERROR CONVERT TO INT64 CODE: ",err,strCode)
 	}

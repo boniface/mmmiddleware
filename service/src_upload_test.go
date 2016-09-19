@@ -19,8 +19,7 @@ func TestCustomerUpload(t *testing.T) {
 	referenceUploads.Username = "biangacila"
 	referenceUploads.ReferenceId = referenceId
 	referenceUploads.SessionId =sessionId
-	referenceUploads.Url = "Jan 2015.csv"
-
+	referenceUploads.Url ="TBMAR10.csv" //"Jan 2015.csv" //
 	//* todo get upload setting / for now let use our default setting for demo purpose
 	upsetting := model.UploadSetting{}
 	uploaSetting := upsetting.GetDefault()
@@ -32,8 +31,8 @@ func TestCustomerUpload(t *testing.T) {
 	datefileinfo := model.DateInfoFile{}
 	datefileinfo.Year, datefileinfo.Month, datefileinfo.Day, datefileinfo.Start, datefileinfo.End =FindDateYearMonthDay(filedata,uploaSetting)
 	//now let build customer upload data array
-	custUpData :=StartUploadService(filedata,uploaSetting,referenceUploads,datefileinfo)
-	fmt.Println("------->> DATA CUST >> ",custUpData)
+	StartUploadService(filedata,uploaSetting,referenceUploads,datefileinfo)
+	//fmt.Println("------->> DATA CUST >> ",custUpData)
 
 
 }

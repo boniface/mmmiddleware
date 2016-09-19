@@ -21,3 +21,28 @@ type CustomerUpload struct {
 	MappingCode string
 }
 
+func (cup *CustomerUpload)DetermineTransctionType( )string{
+
+	if cup.CreditValue !=0 && cup.DebitValue !=0{
+		cup.TxnType = "BOTH"
+		return "BOTH"
+	}
+
+	if cup.CreditValue ==0 && cup.DebitValue ==0{
+		cup.TxnType = "FUTURE"
+		return "FUTURE"
+	}
+
+	if cup.CreditValue ==0 && cup.DebitValue !=0{
+		cup.TxnType = "DEBIT"
+		return "DEBIT"
+	}
+
+	if cup.CreditValue !=0 && cup.DebitValue ==0{
+		cup.TxnType = "CREDIT"
+		return "CREDIT"
+	}
+
+	return "UNKNOW"
+}
+
