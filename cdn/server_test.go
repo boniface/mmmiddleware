@@ -2,26 +2,56 @@ package cdn
 
 import (
 	"testing"
+	"fmt"
 )
 
 func TestRunMain(t *testing.T){
 
-	Rummain()
+
 }
 
 func TestTmain(t *testing.T)  {
-	Tmain()
+
 }
 
 func TestSaveData(t *testing.T){
-	SaveData()
-	//SaveFileByte()
-
-	fileId :="57dfa368b315f1227b2213a5"
-	OpenSavedFile(fileId )
-	// 57dec1b3b315f13eb095d0b8
 }
 
 func TestSaveFileByte(t *testing.T) {
 	SaveFileByte()
+}
+func TestFindAllDoc(t *testing.T){
+	FindAllDoc()
+}
+func TestSaveFileUrl(t *testing.T) {
+	dir :=""
+	filename :=  "adli welcome stand alone.m4a" //"https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcQOCaZ_IGHY6RDqUpjm9MBvK-i7q6Un4cF7RKIThtNVcgwb93G78g" //
+	locationType :="local"
+	if locationType =="local"{
+		dir ="./tmp-file-in/"+filename
+	}
+	if locationType =="remote"{
+		dir =""+filename
+	}
+	filename ="test01.txt"
+	ref :=make(map[string]string)
+	ref["orgcode"]="mm01"
+	ref["department"]="sales"
+	ref["docType"]="birth certificate"
+	ref["inref"]="987kjuyt"
+	ref["user"]="biangacila@gmail.com"
+	ref["toten"]="ewwgsagsgsgggg9633"
+	ref["module"]="qa"
+	file :=SaveFileUrl(dir,filename,ref)
+	fmt.Println("****> save file url > ",file)
+}
+func TestFindChunksFile(t *testing.T){
+	id :="57e159cfb315f14e50a173a5"
+	FindChunksFile(id)
+}
+
+
+func TestGetMetadata(t *testing.T){
+	id :="57e159cfb315f14e50a173a5"
+	GetMetadata(id)
 }
