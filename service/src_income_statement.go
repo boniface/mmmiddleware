@@ -43,6 +43,7 @@ type RepFinanceStatement struct {
 	ProfitBeforeIncomeTax IncomeStatement
 	Tax IncomeStatement
 	NetProfit IncomeStatement
+	Ebitda IncomeStatement
 	/* let get the target data */
 	CustUploadData []model.CustomerUpload
 }
@@ -82,7 +83,7 @@ func(obj *RepFinanceStatement)RunRep(){
 	obj.DepreciationMethod()
 }
 func(obj *RepFinanceStatement)LoadCustUploadData(){
-	qry :="select * from custuploads where orgcode='"+obj.OrgCode+"' and year='"+obj.Year+"' "
+	qry :=fmt.Sprintf("select * from custuploads where orgcode='%s' and year=%s ",obj.OrgCode,obj.Year)
 	ls :=[]model.CustomerUpload{}
 	rs :=dbconn.RunQueryCassCollection(qry)
 	json.Unmarshal([]byte(rs),&ls)
@@ -130,43 +131,11 @@ func(obj *RepFinanceStatement)InterestPaidMethod(){
 	statement := obj.buildWithKeySearchDesc(keysearch)
 	obj.InterestPaid = statement
 	fmt.Println("[Interest Paid] --> ",statement.Total,statement.ListItem)
-
-
-
-	/*searfor :=strings.ToLower("Interest Paid")
-	qry :="select * from custuploads where orgcode='"+obj.OrgCode+"' and year='"+obj.Year+"' "
-	ls :=[]CustomerUpload{}
-	rs :=dbconn.RunQueryCassCollection(qry)
-	json.Unmarshal([]byte(rs),&ls)
-	statement :=IncomeStatement{}
-	statement.Month = obj.Month
-	statement.Year = obj.Year
-	statement.Category = "year"
-	statement.Total = 0.0
-	statement.OrgCode = obj.OrgCode
-	for _,row:=range ls{
-		orgvalue :=strings.ToLower(row.EntryDescription)
-		if strings.Contains(orgvalue,searfor){
-			item :=IncomeItem{}
-			item.Desc = row.EntryDescription
-			var cost float64 = 0
-
-			if row.TxnType == "DEBIT"{
-				cost ,_ =strconv.ParseFloat( row.DebitValue,64)
-			}
-			if row.TxnType == "CREDIT"{
-				cost ,_ =strconv.ParseFloat( row.CreditValue,64)
-				//cost = row.CreditValue
-			}
-			item.Cost = cost
-			statement.Total = statement.Total+ cost
-			statement.ListItem  = append(statement.ListItem,item)
-		}
-	}
-	obj.InterestPaid = statement
-*/
 }
 
+func(obj *RepFinanceStatement)EbitdaMethod(){
+
+}
 func(obj *RepFinanceStatement)TaxMethod(){
 	//todo
 }
@@ -183,7 +152,7 @@ func(obj *RepFinanceStatement)ProfitBeforeIncomeTaxMethod(){
 func(obj *RepFinanceStatement)buildWithKeySearchDesc(keysearch string)IncomeStatement{
 	//todo
 	searfor :=strings.ToLower(keysearch)
-	qry :="select * from custuploads where orgcode='"+obj.OrgCode+"' and year='"+obj.Year+"' "
+	qry :=fmt.Sprintf("select * from custuploads where orgcode='%s' and year=%s ",obj.OrgCode,obj.Year)
 	ls :=[]CustomerUpload{}
 	rs :=dbconn.RunQueryCassCollection(qry)
 	json.Unmarshal([]byte(rs),&ls)
@@ -217,7 +186,7 @@ func(obj *RepFinanceStatement)buildWithKeySearchDesc(keysearch string)IncomeStat
 }
 
 func(obj *RepFinanceStatement)BuildData(cat string)IncomeStatement{
-	qry :="select * from custuploads where orgcode='"+obj.OrgCode+"' and year='"+obj.Year+"' "
+	qry := fmt.Sprintf("select * from custuploads where orgcode='%s' and year=%s ",obj.OrgCode,obj.Year)
 	//ls2 :=[]model.CustomerUpload{}
 	ls :=[]CustomerUpload{}
 	rs :=dbconn.RunQueryCassCollection(qry)

@@ -8,7 +8,7 @@ import (
 func TestRepFinanceStatement_LoadCustUploadData(t *testing.T) {
 	rep :=RepFinanceStatement{}
 	rep.OrgCode = "MM01"
-	rep.Year = "2010"
+	rep.Year = "2011"
 	rep.Month = "3"
 	rep.LoadCustUploadData()
 	fmt.Println(" -->> ",len(rep.CustUploadData))
@@ -16,7 +16,7 @@ func TestRepFinanceStatement_LoadCustUploadData(t *testing.T) {
 func TestRepFinanceStatement_RunRep(t *testing.T) {
 	rep :=RepFinanceStatement{}
 	rep.OrgCode = "MM01"
-	rep.Year = "2010"
+	rep.Year = "2011"
 	rep.Month = "3"
 	rep.LoadCustUploadData()
 	fmt.Println(" -->> ",len(rep.CustUploadData))

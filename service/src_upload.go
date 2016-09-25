@@ -55,6 +55,8 @@ func StartUploadService(filedata []string,uploadSetting model.UploadSetting,uplo
 			}
 			if contains(row, indexCredit){
 				mmCredit = row[indexCredit]
+				mmCredit = strings.Trim(mmCredit,"\r")
+
 			}
 			if contains(row, indexDesc){
 				mmDesc = row[indexDesc]
@@ -78,6 +80,9 @@ func StartUploadService(filedata []string,uploadSetting model.UploadSetting,uplo
 				if mmDebit ==""{
 					mmDebit = "0"
 				}
+
+				mmDebit = strings.Trim(mmDebit," ")
+				mmCredit = strings.Trim(mmCredit," ")
 
 				debit ,_:=strconv.ParseFloat(mmDebit,64)
 				credit ,_:=strconv.ParseFloat(mmCredit,64)

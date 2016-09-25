@@ -25,9 +25,9 @@ type FinanceInfo struct {
 }
 
 func(uInfo *FinanceInfo)LoadOneYeaUploadedInfo(){
-
 	ls := []model.CustomerUpload{}
-	qry :=fmt.Sprintf("select * from custUploads where orgcode ='%s' and year=%d ",uInfo.OrgCode,uInfo.Year)
+	qry :=fmt.Sprintf("select * from custUploads where orgcode ='%s'  order by year ASC, month ASC ",uInfo.OrgCode)
+	fmt.Println(qry)
 	strRs :=dbconn.RunQueryCassCollection(qry)
 	json.Unmarshal([]byte(strRs),&ls)
 	mymap :=make(map[string]model.CustomerUpload)
@@ -46,3 +46,7 @@ func(uInfo *FinanceInfo)LoadOneYeaUploadedInfo(){
 	}
 
 }
+
+// select * from custUploads where orgcode ='MM01' and year=2001
+
+// select orgcode,year,month,accountingcode,entrycategory,entrydescription,debitvalue,creditvalue,date from custuploads where orgcode='MM01' and year=2011 ;
