@@ -3,14 +3,14 @@ package model
 type CustomerUpload struct {
 	UpRef string
 	OrgCode string
-	Id string
+	//Id string
 	Refrence string
 	Date string
 	AccountingCode string
 	Year int
 	Month int
 	Day int
-	AccounttingSystem string
+	AccountingSystem string
 	TxnType string
 	DebitValue float64
 	CreditValue float64

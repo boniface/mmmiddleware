@@ -307,15 +307,13 @@ func RunQueryCassCollectionFeedback(qry string) (string,error) {
 		slist = GetServerCassandra("live")
 	}
 	err := CassSession.Query(qry).Exec();
-	fmt.Println("RunQueryCassCollection Error --->>> ", err, " > ", qry)
-	/*if  err != nil {
+
+	if  err != nil {
 		fmt.Println("RunQueryCassCollection Error --->>> ", err, " > ", qry)
-	}*/
+	}
 	iter := CassSession.Query(qry).Iter()
 	myrow, _ := iter.SliceMap()
 	str, _ := json.Marshal(myrow)
-
-
 	return string(str),nil;
 }
 func RunQueryCassCollection(qry string) string {
@@ -328,6 +326,7 @@ func RunQueryCassCollection(qry string) string {
 
 	if err := CassSession.Query(qry).Exec(); err != nil {
 		fmt.Println("RunQueryCassCollection Error --->>> ", err, " > ", qry)
+		log.Panic("**** PANIC PLEASE REMOVE THIS IN PRODUCTION TO AVOID SYSTEM DONW ***")
 	}
 	iter := CassSession.Query(qry).Iter()
 	myrow, _ := iter.SliceMap()
@@ -336,10 +335,10 @@ func RunQueryCassCollection(qry string) string {
 	return string(str);
 }
 func SetDbServerFilename() []string {
-	dirname := "." + string(filepath.Separator) + "dbserver.init"
+	dirname := "." + string(filepath.Separator) + "cassandra.conf"
 	if _, err := os.Stat(dirname); os.IsNotExist(err) {
 		// dirname does not exist
-		dirname = ".." + string(filepath.Separator) + "dbserver.init"
+		dirname = ".." + string(filepath.Separator) + "cassandra.conf"
 	}
 	dbserverFilename = dirname
 
@@ -449,6 +448,10 @@ func GetInsertQueryFromMap(mymap map[string]interface{}, table string) string {
 	for key, val := range mymap {
 		strval := ""
 
+		if _, ok := val.(int); ok {
+			d := fmt.Sprintf("%d", val.(int))
+			strval = d
+		}
 		if _, ok := val.(int64); ok {
 			d := fmt.Sprintf("%d", val.(int64))
 			strval = d
@@ -480,6 +483,67 @@ func GetInsertQueryFromMap(mymap map[string]interface{}, table string) string {
 	var str string = "insert into " + table + "(" + col + ") values(" + values + ") ";
 	return str
 }
+
+func GetInsertQueryFromMapMM(mymap map[string]interface{}, table string) string {
+	x := 0
+	var col, values string
+	for key, val := range mymap {
+		strval := ""
+
+		mytype :="none"
+
+		if _, ok := val.(int); ok {
+			d := fmt.Sprintf("%d", val.(int))
+			strval = d
+			mytype="int"
+		}
+		if _, ok := val.(int64); ok {
+			d := fmt.Sprintf("%d", val.(int64))
+			strval = d
+			mytype="int"
+		}
+		if _, ok := val.(float64); ok {
+			d := fmt.Sprintf("%.2f", val.(float64))
+			strval = d
+			mytype="float"
+		}
+		if _, ok := val.(string); ok {
+			strval = string(val.(string))
+			mytype="string"
+		}
+
+		if x == 0 {
+			if strval != "" {
+				col = col + "" + key + " "
+
+				if mytype =="int" || mytype=="float"{
+					values = values + " " + strval + " "
+				}else{
+					values = values + "'" + strval + "' "
+				}
+
+				x++
+			}
+		} else {
+			if strval != "" {
+				col = col + "," + key + " "
+
+				if mytype =="int" || mytype=="float"{
+					values = values + "," + strval + " "
+				}else{
+					values = values + ",'" + strval + "' "
+				}
+
+				x++
+			}
+
+		}
+
+	}
+	var str string = "insert into " + table + "(" + col + ") values(" + values + ") ";
+	return str
+}
+
 func GetUpdateQueryFromMap_ConditionEqual(table string, mymapdata map[string]interface{}, mymapcond map[string]interface{}, avoided []string) string {
 	qry := "update " + table + " set "
 	x := 0

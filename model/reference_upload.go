@@ -1,6 +1,7 @@
 package model
 
 type ReferenceUploads struct{
+	OrgCode string
 	Date string
 	ReferenceId string
 	SessionId string
@@ -9,6 +10,7 @@ type ReferenceUploads struct{
 	Fullname string
 	Url string
 	UploadSettingsId string
+
 }
 
 

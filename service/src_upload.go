@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"github.com/pborman/uuid"
-	"time"
 	"hashcode.zm/mmmiddleware/dbconn"
-	//"regexp"
+	"github.com/fatih/structs"
+	"hashcode.zm/communex-kiosk/generic"
 )
 
 type DateEF struct {
@@ -26,7 +26,7 @@ func StartUploadService(filedata []string,uploadSetting model.UploadSetting,uplo
 	custUploadData :=[]model.CustomerUpload{}
 	total :=0
 	startX := uploadSetting.RowStart - 1
-	p :=fmt.Println
+	//p :=fmt.Println
 	for x,online :=range filedata{
 		if x>=startX{
 			row:=[]string{}
@@ -85,62 +85,90 @@ func StartUploadService(filedata []string,uploadSetting model.UploadSetting,uplo
 				custData :=builCustomerUploadData(online,uploadSetting,dateinfo,txnType,debit,credit,mmDesc,mmCode)
 				custUploadData = append(custUploadData,custData)
 				total++
-				p("MMCODE -=> ",mmCode," > ",mmDesc," > ",mmDebit," > ",mmCredit," > ")
 			}
 
 		}
 	}
-
-	p("total >> ",total)
-
+// select orgcode,year,month,AccountingCode,entrycategory,debitvalue,creditvalue,date  from custuploads where orgcode='MM01';
 	return custUploadData
 
-}
 
+}
 func builCustomerUploadData(rawdata string,uploadSetting model.UploadSetting,dateinfo model.DateInfoFile,txnType string,debitValue float64,creditValue float64, entryDesc string,mmcode string)model.CustomerUpload{
 	//cdate,ctime :=generic.GetDateAndTimeString()
+	d,t :=generic.GetDateAndTimeString()
+	strDate := d+" "+t
+	var err error
 	fs,_ :=FindFinanceStateInfo_Pastel(mmcode)
 	custUploadData :=model.CustomerUpload{}
 	custUploadData.UpRef =""
 	custUploadData.OrgCode =uploadSetting.OrgCode
-	custUploadData.Id =uuid.New()
+	//custUploadData.Id =uuid.New()
 	custUploadData.Refrence =""
-	custUploadData.Date =time.Stamp //   cdate+" "+ctime
+	custUploadData.Date =strDate //   cdate+" "+ctime
 	custUploadData.AccountingCode =mmcode
-	custUploadData.Year,_ =strconv.Atoi(dateinfo.Year)
+	custUploadData.Year,err =strconv.Atoi(dateinfo.Year)
+
+	if err != nil {
+		fmt.Println(" ERROR YEAR CANT BE EMPTY >>>> ",err," > ",dateinfo.Year)
+		return custUploadData
+	}
 	custUploadData.Month,_ =strconv.Atoi(dateinfo.Month)
 	custUploadData.Day,_ =strconv.Atoi(dateinfo.Day)
-	custUploadData.AccounttingSystem ="PASTEL"
+	custUploadData.AccountingSystem ="PASTEL"
 	custUploadData.DebitValue = debitValue
 	custUploadData.CreditValue =creditValue
 	custUploadData.TxnType = txnType
 	custUploadData.EntryDescription =entryDesc
 	custUploadData.EntryCategory =fs.Category
 	custUploadData.EntrySubCategory = fs.SubCategory
-	custUploadData.CsvStringInput =rawdata
+	custUploadData.CsvStringInput =""
 	custUploadData.MappingCode =""
 	custUploadData.DetermineTransctionType()
+
+	if custUploadData.DebitValue ==0.00{
+		custUploadData.DebitValue = 0
+	}
+	if custUploadData.CreditValue==0.00{
+		custUploadData.CreditValue = 0
+	}
+
 	if custUploadData.EntryDescription !=""{
 		if !strings.Contains(custUploadData.EntryDescription,"\r"){
 			if !strings.Contains(custUploadData.EntryDescription,"\n"){
-				dbconn.InsertRowTable(custUploadData ,"customerUpload")
+				mymap := structs.Map(custUploadData)
+				cleanYear :=fmt.Sprintf("'%d'",custUploadData.Year)
+				cleanMonth :=fmt.Sprintf("'%d'",custUploadData.Month)
+				cleanDay :=fmt.Sprintf("'%d'",custUploadData.Day)
+				rYear :=fmt.Sprintf("%d",custUploadData.Year)
+				rMonth :=fmt.Sprintf("%d",custUploadData.Month)
+				rday:=fmt.Sprintf("%d",custUploadData.Day)
+
+				fZero :=fmt.Sprintf("'%d'",0)
+				rZero :=fmt.Sprintf("%d",0)
+
+
+				qry := dbconn.GetInsertQueryFromMapMM(mymap,"custuploads")
+				qry = strings.Replace(qry,`0.00`,`0`,100)
+				qry = strings.Replace(qry,`accounttingsystem`,`accountingsystem`,100)
+
+				qry = strings.Replace(qry,cleanYear,rYear,100)
+				qry = strings.Replace(qry,cleanMonth,rMonth,100)
+				qry = strings.Replace(qry,cleanDay,rday,100)
+				qry = strings.Replace(qry,fZero,rZero,100)
+
+				dbconn.RunQueryCassCollection(qry)
 			}
-
 		}
-
 	}
-
 	return custUploadData
 }
-
-
-
 func CheckIfFileInPool(env string) []string {
 	var finded []string
-	dirname := "." + string(filepath.Separator) + "csv_uploaded/fresh/"
+	dirname := "." + string(filepath.Separator) + "tmp-file-in/"
 
 	if env == "test" {
-		dirname = ".." + string(filepath.Separator) + "csv_uploaded/fresh/"
+		dirname = ".." + string(filepath.Separator) + "tmp-file-in/"
 	}
 
 	log.Println("******> ", dirname)
@@ -165,13 +193,14 @@ func CheckIfFileInPool(env string) []string {
 	log.Println("[data file list] >",len(finded))
 	return finded
 }
-func ReadCsvInto_CustomerUpload(filename string) []string {
+func  ReadCsvInto_CustomerUpload(filename string) []string {
 	buf := bytes.NewBuffer(nil)
 	f, err := os.Open(filename) // Error handling elided for brevity.
 	log.Println("Err filename ****> ", err)
 	io.Copy(buf, f)           // Error handling elided for brevity.
 	f.Close()
 	s := string(buf.Bytes())
+	s = strings.Replace(s,`'`,"",1000)
 	/*
 	let build the data now
 	 */
@@ -179,7 +208,7 @@ func ReadCsvInto_CustomerUpload(filename string) []string {
 	lines := strings.Split(s, "\n")
 
 	for _, oneline := range lines {
-		fmt.Println("===>", oneline)
+		//fmt.Println("===>", oneline)
 		upList = append(upList, oneline)
 	}
 	return upList
@@ -210,7 +239,7 @@ func FindDateYearMonthDay(data []string,current model.UploadSetting) (string, st
 }
 func analizeDateFormation(format string, online string) (DateEF,DateEF) {
 	arrStr := strings.Split(online, ":")
-	log.Println("arrStr)-->> ", len(arrStr))
+	//log.Println("arrStr)-->> ", len(arrStr))
 
 	for xid, td := range arrStr {
 		fmt.Println("[", xid, "] ", td)
@@ -219,8 +248,7 @@ func analizeDateFormation(format string, online string) (DateEF,DateEF) {
 	dataStart :=extractDate(strings.Trim(targetOne[0]," "))
 	dataEnd :=extractDate(strings.Trim(targetOne[1]," "))
 	//find date one
-	log.Println("readh 22 ----> ", targetOne)
-	fmt.Println("99999----> ", dataStart,dataEnd)
+
 return dataStart,dataEnd
 }
 func extractDate(datestring string) DateEF {
@@ -241,41 +269,27 @@ func extractDate(datestring string) DateEF {
 	fmt.Println("=====>> Day: ",mydate.Day,"; Month: ",mydate.Month," ; year : ",mydate.Year)
 	return mydate
 }
-
 var MapFinancialStatementInfo map[string]model.FinancialStatementInfo
-
 func LoadDefaultFinanceCodePastel()map[string]model.FinancialStatementInfo{
 
 	MapFinancialStatementInfo  = make(map[string]model.FinancialStatementInfo)
 	fInfo :=make(map[string]model.FinancialStatementInfo)
 	/* INCOME STATEMENT */
 	fInfo[uuid.New()] =model.FinancialStatementInfo{Type :"INCOME STATEMENT",Category:"SALES",SubCategory:"SALES", StartCode:1000,EndCode:1999}
-
 	fInfo[uuid.New()] =model.FinancialStatementInfo{Type :"INCOME STATEMENT",Category:"COST OF SALES",SubCategory:"COST OF SALES", StartCode:2000,EndCode:2499}
-
 	fInfo[uuid.New()] =model.FinancialStatementInfo{Type :"INCOME STATEMENT",Category:"OTHER INCOME",SubCategory:"OTHER INCOME", StartCode:2500,EndCode:2999}
-
 	fInfo[uuid.New()] =model.FinancialStatementInfo{Type :"INCOME STATEMENT",Category:"EXPENSES",SubCategory:"EXPENSES", StartCode:3000,EndCode:4999}
-
 	/* BALANCE SHEET */
-
 	fInfo[uuid.New()] =model.FinancialStatementInfo{Type :"BALANCE SHEET",Category:"EQUITY & LONG TERM LIABILITIES",SubCategory:"OWNERS EQUITY", StartCode:5100,EndCode:5499}
-
 	fInfo[uuid.New()] =model.FinancialStatementInfo{Type :"BALANCE SHEET",Category:"EQUITY & LONG TERM LIABILITIES",SubCategory:"LONG TERM LIABILITIES", StartCode:5500,EndCode:5799}
-
-
-
 	fInfo[uuid.New()] =model.FinancialStatementInfo{Type :"BALANCE SHEET",Category:"CURRENT ASSETS",SubCategory:"FIXED ASSETS", StartCode:6000,EndCode:6699}
-
 	fInfo[uuid.New()] =model.FinancialStatementInfo{Type :"BALANCE SHEET",Category:"CURRENT ASSETS",SubCategory:"CURRENT ASSETS", StartCode:7000,EndCode:8999}
-
 	fInfo[uuid.New()] =model.FinancialStatementInfo{Type :"BALANCE SHEET",Category:"CURRENT LIABILITIES",SubCategory:"CURRENT LIABILITIES", StartCode:9000,EndCode:9999}
 
 	MapFinancialStatementInfo = fInfo
 
 	return MapFinancialStatementInfo
 }
-
 func FindFinanceStateInfo_Pastel(mmcode string)(model.FinancialStatementInfo,bool){
 
 	fsInfo :=model.FinancialStatementInfo{}
@@ -322,7 +336,6 @@ func checkIfNumBetween(num int64,startNum int64,endNum int64)bool{
 	}
 	return boo
 }
-
 func contains(s []string, e int) bool {
 	mylen := len(s)
 	if e >=0 && e <= mylen-1{

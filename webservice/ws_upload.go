@@ -1,4 +1,4 @@
-package cdn
+package webservice
 
 import (
 	"net/http"
@@ -17,15 +17,8 @@ import (
 	"github.com/fatih/structs"
 	"hashcode.zm/mmmiddleware/dbconn"
 	"html"
+	"hashcode.zm/mmmiddleware/cdn"
 )
-
-func StartDataStore(){
-	fs := http.FileServer(http.Dir("www"))
-	http.Handle("/cdn", fs)
-	http.HandleFunc("/uploaddoc2", UploadfileHandler)
-	log.Println("Listening StaticWebsiteStore...")
-	log.Fatal(http.ListenAndServe(":19005", nil))
-}
 
 // Acceess handler
 func UploadfileHandler(w http.ResponseWriter, r *http.Request) {
@@ -132,12 +125,12 @@ func SaveFileIntoCdn(mymap map[string]interface{},upRef  model.ReferenceUploads)
 	}
 	fi, err := file.Stat()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err)/* server static content server */
 	}
 	fmt.Println( fi.Size() )
 
 
-	cdn :=CdnEntry{}
+	cdn :=cdn.CdnEntry{}
 	cdn.Filename = upRef.Url //"test01.txt"
 	myref,_:= json.Marshal(mymap)
 	cdn.Ref = string(myref)
@@ -173,3 +166,4 @@ func OrignAllowed(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Headers", authorizeheader())
 	w.Header().Set("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS")
 }
+

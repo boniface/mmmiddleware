@@ -13,19 +13,21 @@ func TestCustomerUpload(t *testing.T) {
 	sessionId :=uuid.New()
 	referenceId :=uuid.New()
 	referenceUploads := model.ReferenceUploads{}
+	referenceUploads.OrgCode ="MM01"
 	referenceUploads.Date ="2015-01-01"
 	referenceUploads.Fullname ="biangacila merveilleux"
 	referenceUploads.Login = "biangacila"
 	referenceUploads.Username = "biangacila"
 	referenceUploads.ReferenceId = referenceId
 	referenceUploads.SessionId =sessionId
-	referenceUploads.Url ="TBMAR10.csv" //"Jan 2015.csv" //
+	referenceUploads.Url ="../tmp-file-in/TBSEP10.csv" //"Jan 2015.csv" //
 	//* todo get upload setting / for now let use our default setting for demo purpose
 	upsetting := model.UploadSetting{}
 	uploaSetting := upsetting.GetDefault()
-
+	/* add upsetting to reference upload */
+	referenceUploads.UploadSettingsId = uploaSetting.Id
 	// now let get data from the url file
-	filename:="../csv_uploaded/fresh/"+referenceUploads.Url
+	filename:="../tmp-file-in/"+referenceUploads.Url
 	filedata :=ReadCsvInto_CustomerUpload(filename)
 	// now let get upload setting
 	datefileinfo := model.DateInfoFile{}
@@ -33,8 +35,6 @@ func TestCustomerUpload(t *testing.T) {
 	//now let build customer upload data array
 	StartUploadService(filedata,uploaSetting,referenceUploads,datefileinfo)
 	//fmt.Println("------->> DATA CUST >> ",custUpData)
-
-
 }
 func TestCheckIfFileInPool(t *testing.T) {
 	listFile :=CheckIfFileInPool("test")

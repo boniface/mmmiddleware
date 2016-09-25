@@ -82,7 +82,7 @@ func(obj *RepFinanceStatement)RunRep(){
 	obj.DepreciationMethod()
 }
 func(obj *RepFinanceStatement)LoadCustUploadData(){
-	qry :="select * from customerUpload where orgcode='"+obj.OrgCode+"' and year='"+obj.Year+"' "
+	qry :="select * from custuploads where orgcode='"+obj.OrgCode+"' and year='"+obj.Year+"' "
 	ls :=[]model.CustomerUpload{}
 	rs :=dbconn.RunQueryCassCollection(qry)
 	json.Unmarshal([]byte(rs),&ls)
@@ -134,7 +134,7 @@ func(obj *RepFinanceStatement)InterestPaidMethod(){
 
 
 	/*searfor :=strings.ToLower("Interest Paid")
-	qry :="select * from customerUpload where orgcode='"+obj.OrgCode+"' and year='"+obj.Year+"' "
+	qry :="select * from custuploads where orgcode='"+obj.OrgCode+"' and year='"+obj.Year+"' "
 	ls :=[]CustomerUpload{}
 	rs :=dbconn.RunQueryCassCollection(qry)
 	json.Unmarshal([]byte(rs),&ls)
@@ -183,7 +183,7 @@ func(obj *RepFinanceStatement)ProfitBeforeIncomeTaxMethod(){
 func(obj *RepFinanceStatement)buildWithKeySearchDesc(keysearch string)IncomeStatement{
 	//todo
 	searfor :=strings.ToLower(keysearch)
-	qry :="select * from customerUpload where orgcode='"+obj.OrgCode+"' and year='"+obj.Year+"' "
+	qry :="select * from custuploads where orgcode='"+obj.OrgCode+"' and year='"+obj.Year+"' "
 	ls :=[]CustomerUpload{}
 	rs :=dbconn.RunQueryCassCollection(qry)
 	json.Unmarshal([]byte(rs),&ls)
@@ -217,7 +217,7 @@ func(obj *RepFinanceStatement)buildWithKeySearchDesc(keysearch string)IncomeStat
 }
 
 func(obj *RepFinanceStatement)BuildData(cat string)IncomeStatement{
-	qry :="select * from customerUpload where orgcode='"+obj.OrgCode+"' and year='"+obj.Year+"' "
+	qry :="select * from custuploads where orgcode='"+obj.OrgCode+"' and year='"+obj.Year+"' "
 	//ls2 :=[]model.CustomerUpload{}
 	ls :=[]CustomerUpload{}
 	rs :=dbconn.RunQueryCassCollection(qry)

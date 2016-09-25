@@ -1,36 +1,32 @@
 package main
 
 import (
-	"hashcode.zm/mmmiddleware/service"
-	"fmt"
-	"hashcode.zm/mmmiddleware/model"
+	//"hashcode.zm/mmmiddleware/service"
+	//"fmt"
+	//"hashcode.zm/mmmiddleware/model"
+	"hashcode.zm/mmmiddleware/cdn"
+	"net/http"
+	"log"
+	ws "hashcode.zm/mmmiddleware/webservice"
 )
 
 
 func main() {
 
-	// demo only
-	//todo please switch to realy upload setting late
-	upsetting := model.UploadSetting{}
-	current := upsetting.GetDefault()
+	/* set mongo db ipaddress */
+	mongoIp :=cdn.GetMongoServerIp()
+	cdn.MongoServerIp = mongoIp
+	/* Run CDN server */
+	go cdn.StartDataStore()
+	/* RUN FOR EVER */
+	fs := http.FileServer(http.Dir("www"))
+	http.Handle("/", fs)
+	http.HandleFunc("/uploaddoc", ws.UploadfileHandler)
+	http.HandleFunc("/financiary/statement/income", ws.Ws_FinanciaryStatement_Income)
+	http.HandleFunc("/financiary/statement/uploaded", ws.Ws_FinanciaryStatement_Uploaded)
 
-	p :=fmt.Println
-	listFile := service.CheckIfFileInPool("live")
-	strdis :=fmt.Sprintf(">>>>filedata => %d ",len(listFile))
-	p(strdis)
-	if len(listFile) > 0{
-		p(">>PASS 01")
-		for _,filename :=range listFile{
-			datefileinfo :=model.DateInfoFile{}
-			p(">>PASS 02")
-			filedata :=service.ReadCsvInto_CustomerUpload(filename)
-			p(">>PASS 03 ROWS:  ",len(filedata))
-			//fmt.Sprint  f("filedata => %v ",filedata)
-			datefileinfo.Year, datefileinfo.Month, datefileinfo.Day, datefileinfo.Start, datefileinfo.End =service.FindDateYearMonthDay(filedata,current)
-			p(">>PASS 04 > ",datefileinfo.Year, datefileinfo.Month, datefileinfo.Day, datefileinfo.Start)
-
-		}
-	}
-
-
+	log.Println("Listening StaticWebsiteStore...")
+	log.Fatal(http.ListenAndServe(":19004", nil))
 }
+
+

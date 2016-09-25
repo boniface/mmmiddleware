@@ -129,4 +129,9 @@ comment text,
 PRIMARY KEY (company,date,mongoId,id)
 );
 
-
+drop table cdn;
+drop table cdncampaign;
+drop table cdncompany;
+drop table cdnDepartment;
+drop table cdnEmail;
+drop table cdnDocType;

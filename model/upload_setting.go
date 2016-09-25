@@ -4,7 +4,7 @@ type UploadSetting struct {
 	OrgCode string
 	SeesionId string
 	Id string
-	MapingType string
+	MapingTypeId string
 	DateFormat string
 	AccountSystem string
 	CodeColom int
@@ -13,6 +13,7 @@ type UploadSetting struct {
 	CreditColom int
 	DateColom int
 	RowStart int
+	DateRow int
 	Status string
 }
 
@@ -27,7 +28,7 @@ func DefautSetting() UploadSetting{
 	upset := UploadSetting{}
 	upset.OrgCode = "MM01"
 	upset.Id = "MM2016-08-19x16-04"
-	upset.MapingType = "MT001" // MT001 -> mapping range
+	upset.MapingTypeId = "MT001" // MT001 -> mapping range
 	upset.DateFormat = "dd/mm/yyyy"
 	upset.AccountSystem = "pastel"
 	upset.CodeColom = 2
